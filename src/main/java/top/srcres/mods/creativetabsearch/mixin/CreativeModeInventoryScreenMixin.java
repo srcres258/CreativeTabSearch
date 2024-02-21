@@ -51,17 +51,14 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
         // Only enable the creative tab searching ability when the specific game mode is satisfied
         // as mentioned in vanilla code.
         if (this.minecraft.gameMode.hasInfiniteItems()) {
-            // Ensure the number of creative tab pages is more than one.
-            if (CreativeModeTabRegistry.getSortedCreativeModeTabs().size() > 10) {
-                this.tabSearchEditBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
-                        this.imageWidth - 20, 15, this.tabSearchEditBox, Component.literal(""));
-                this.tabSearchEditBox.setResponder(this::tabSearch_updateTabSearch);
-                this.addWidget(this.tabSearchEditBox);
-                this.clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
-                        .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
-                this.clearButton.active = !this.tabSearchEditBox.getValue().isEmpty();
-                this.addRenderableWidget(this.clearButton);
-            }
+            this.tabSearchEditBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
+                    this.imageWidth - 20, 15, this.tabSearchEditBox, Component.literal(""));
+            this.tabSearchEditBox.setResponder(this::tabSearch_updateTabSearch);
+            this.addWidget(this.tabSearchEditBox);
+            this.clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
+                    .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
+            this.clearButton.active = !this.tabSearchEditBox.getValue().isEmpty();
+            this.addRenderableWidget(this.clearButton);
         }
     }
 
