@@ -20,20 +20,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingInventoryScreen<CreativeModeInventoryScreen.ItemPickerMenu> {
-    protected EditBox tabSearchEditBox;
-    protected Button clearButton;
+    @Unique
+    protected EditBox tabSearch_editBox;
+    @Unique
+    protected Button tabSearch_clearButton;
     @Shadow
     @Final
     private List<CreativeTabsScreenPage> pages;
     @Shadow
     private CreativeTabsScreenPage currentPage;
-
-    @Shadow private static CreativeModeTab selectedTab;
 
     public CreativeModeInventoryScreenMixin(CreativeModeInventoryScreen.ItemPickerMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
         super(pMenu, pPlayerInventory, pTitle);
@@ -48,28 +47,28 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
         // Only enable the creative tab searching ability when the specific game mode is satisfied
         // as mentioned in vanilla code.
         if (this.minecraft.gameMode.hasInfiniteItems()) {
-            this.tabSearchEditBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
-                    this.imageWidth - 20, 15, this.tabSearchEditBox, Component.literal(""));
-            this.tabSearchEditBox.setResponder(this::tabSearch_updateTabSearch);
-            this.addWidget(this.tabSearchEditBox);
-            this.clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
+            this.tabSearch_editBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
+                    this.imageWidth - 20, 15, this.tabSearch_editBox, Component.literal(""));
+            this.tabSearch_editBox.setResponder(this::tabSearch_updateTabSearch);
+            this.addWidget(this.tabSearch_editBox);
+            this.tabSearch_clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
                     .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
-            this.clearButton.active = !this.tabSearchEditBox.getValue().isEmpty();
-            this.addRenderableWidget(this.clearButton);
+            this.tabSearch_clearButton.active = !this.tabSearch_editBox.getValue().isEmpty();
+            this.addRenderableWidget(this.tabSearch_clearButton);
         }
     }
 
     @Inject(method = "render", at = @At("RETURN"))
     protected void renderTabSearch(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick, CallbackInfo ci) {
-        if (this.tabSearchEditBox != null)
-            this.tabSearchEditBox.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+        if (this.tabSearch_editBox != null)
+            this.tabSearch_editBox.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
     protected void charTypedTabSearch(char pCodePoint, int pModifiers, CallbackInfoReturnable<Boolean> cir) {
         // The callback has to be invoked manually since the origin listener implementation has been overwritten
         // by CreativeModeInventoryScreen within method CreativeModeInventoryScreen#charTyped.
-        if (this.tabSearchEditBox.charTyped(pCodePoint, pModifiers)) {
+        if (this.tabSearch_editBox.charTyped(pCodePoint, pModifiers)) {
             cir.setReturnValue(true);
             cir.cancel();
         }
@@ -78,14 +77,14 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     protected void keyPressedTabSearch(int pKeyCode, int pScanCode, int pModifiers, CallbackInfoReturnable<Boolean> cir) {
         // Need to replace vanilla key pressing logic when editing tab search EditBox.
-        if (this.tabSearchEditBox.isFocused()) {
+        if (this.tabSearch_editBox.isFocused()) {
             // Handle Esc quitting screen logic at first, otherwise the player
             // may feel weird for being unable to close the screen.
             if (pKeyCode == 256 && this.shouldCloseOnEsc()) {
                 this.onClose();
                 cir.setReturnValue(true);
             } else {
-                cir.setReturnValue(this.tabSearchEditBox.keyPressed(pKeyCode, pScanCode, pModifiers));
+                cir.setReturnValue(this.tabSearch_editBox.keyPressed(pKeyCode, pScanCode, pModifiers));
             }
             cir.cancel();
         }
@@ -94,19 +93,19 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
     @Unique
     private void tabSearch_updateTabSearch(String pNewText) {
         if (pNewText.isEmpty()) {
-            this.tabSearchEditBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
+            this.tabSearch_editBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
             tabSearch_resetCreativeTabPages(CreativeModeTabRegistry.getSortedCreativeModeTabs());
-            this.clearButton.active = false;
+            this.tabSearch_clearButton.active = false;
         } else {
             List<CreativeModeTab> result = tabSearch_getMatchingTabs(pNewText);
             if (result.isEmpty()) {
-                this.tabSearchEditBox.setTextColor(0xff0000);
+                this.tabSearch_editBox.setTextColor(0xff0000);
                 tabSearch_resetCreativeTabPages(CreativeModeTabRegistry.getSortedCreativeModeTabs());
             } else {
-                this.tabSearchEditBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
+                this.tabSearch_editBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
                 tabSearch_resetCreativeTabPages(result);
             }
-            this.clearButton.active = true;
+            this.tabSearch_clearButton.active = true;
         }
     }
 
@@ -152,7 +151,7 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
 
     @Unique
     private void tabSearch_clearButtonClicked(Button button) {
-        this.tabSearchEditBox.setValue("");
+        this.tabSearch_editBox.setValue("");
         button.active = false;
     }
 }
