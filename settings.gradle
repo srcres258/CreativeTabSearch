@@ -6,4 +6,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "CreativeTabSearch-${minecraft_version}"
+rootProject.name = "CreativeTabSearch-${mod_api}-${minecraft_version}"
