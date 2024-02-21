@@ -1,7 +1,9 @@
 package top.srcres.mods.creativetabsearch.mixin;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
@@ -26,9 +28,8 @@ import java.util.List;
 
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingInventoryScreen<CreativeModeInventoryScreen.ItemPickerMenu> {
-    @Shadow public abstract void resize(Minecraft pMinecraft, int pWidth, int pHeight);
-
     protected EditBox tabSearchEditBox;
+    protected Button clearButton;
     @Shadow
     @Final
     private List<CreativeTabsScreenPage> pages;
@@ -41,6 +42,10 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
         super(pMenu, pPlayerInventory, pTitle);
     }
 
+    @Shadow
+    private void selectTab(CreativeModeTab pTab) {
+    }
+
     @Inject(method = "init", at = @At("RETURN"))
     protected void initTabSearch(CallbackInfo ci) {
         // Only enable the creative tab searching ability when the specific game mode is satisfied
@@ -49,10 +54,13 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
             // Ensure the number of creative tab pages is more than one.
             if (CreativeModeTabRegistry.getSortedCreativeModeTabs().size() > 10) {
                 this.tabSearchEditBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
-                        this.imageWidth, 15, this.tabSearchEditBox, Component.literal("test"));
+                        this.imageWidth - 20, 15, this.tabSearchEditBox, Component.literal(""));
                 this.tabSearchEditBox.setResponder(this::tabSearch_updateTabSearch);
                 this.addWidget(this.tabSearchEditBox);
-                this.setInitialFocus(this.tabSearchEditBox);
+                this.clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
+                        .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
+                this.clearButton.active = !this.tabSearchEditBox.getValue().isEmpty();
+                this.addRenderableWidget(this.clearButton);
             }
         }
     }
@@ -63,22 +71,49 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
             this.tabSearchEditBox.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
-    @Inject(method = "charTyped", at = @At("HEAD"))
+    @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
     protected void charTypedTabSearch(char pCodePoint, int pModifiers, CallbackInfoReturnable<Boolean> cir) {
         // The callback has to be invoked manually since the origin listener implementation has been overwritten
         // by CreativeModeInventoryScreen within method CreativeModeInventoryScreen#charTyped.
-        this.tabSearchEditBox.charTyped(pCodePoint, pModifiers);
+        if (this.tabSearchEditBox.charTyped(pCodePoint, pModifiers)) {
+            cir.setReturnValue(true);
+            cir.cancel();
+        }
+    }
+
+    @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
+    protected void keyPressedTabSearch(int pKeyCode, int pScanCode, int pModifiers, CallbackInfoReturnable<Boolean> cir) {
+        // Need to replace vanilla key pressing logic when editing tab search EditBox.
+        if (this.tabSearchEditBox.isFocused()) {
+            // Handle Esc quitting screen logic at first, otherwise the player
+            // may feel weird for being unable to close the screen.
+            if (pKeyCode == 256 && this.shouldCloseOnEsc()) {
+                this.onClose();
+                cir.setReturnValue(true);
+            } else {
+                cir.setReturnValue(this.tabSearchEditBox.keyPressed(pKeyCode, pScanCode, pModifiers));
+            }
+            cir.cancel();
+        }
     }
 
     @Unique
     private void tabSearch_updateTabSearch(String pNewText) {
-        CreativeModeTabRegistry.getSortedCreativeModeTabs().forEach(
-                (tab) -> CreativeTabSearch.getInstance().getLogger().info("Found creative tab: {}", tab.getDisplayName().getString()));
-        List<CreativeModeTab> result = tabSearch_getMatchingTabs(pNewText);
-        if (result.isEmpty())
+        if (pNewText.isEmpty()) {
+            this.tabSearchEditBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
             tabSearch_resetCreativeTabPages(CreativeModeTabRegistry.getSortedCreativeModeTabs());
-        else
-            tabSearch_resetCreativeTabPages(result);
+            this.clearButton.active = false;
+        } else {
+            List<CreativeModeTab> result = tabSearch_getMatchingTabs(pNewText);
+            if (result.isEmpty()) {
+                this.tabSearchEditBox.setTextColor(0xff0000);
+                tabSearch_resetCreativeTabPages(CreativeModeTabRegistry.getSortedCreativeModeTabs());
+            } else {
+                this.tabSearchEditBox.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
+                tabSearch_resetCreativeTabPages(result);
+            }
+            this.clearButton.active = true;
+        }
     }
 
     @Unique
@@ -118,6 +153,12 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
             this.currentPage = this.pages.get(0);
         }
 
-        selectedTab = tabList.get(0);
+        this.selectTab(tabList.get(0));
+    }
+
+    @Unique
+    private void tabSearch_clearButtonClicked(Button button) {
+        this.tabSearchEditBox.setValue("");
+        button.active = false;
     }
 }
