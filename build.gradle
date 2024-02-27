@@ -4,6 +4,8 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.neoforged.gradle.userdev' version '7.0.80'
+    id 'com.modrinth.minotaur' version '2.+' // Modrinth publishing plugin
+    id 'net.darkhax.curseforgegradle' version '1.1.18' // CurseForge publishing plugin
 }
 
 version = mod_version
@@ -92,4 +94,51 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+def modAPIReadable = [
+        'neo': "NeoForge",
+        'forge': "Forge",
+        'fabric': "Fabric",
+        'quilt': "Quilt"
+]
+def modAPILoader = [
+        'neo': "neoforge",
+        'forge': "forge",
+        'fabric': "fabric",
+        'quilt': "quilt"
+]
+
+// Modrinth
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN") // Remember to have the MODRINTH_TOKEN environment variable set or else this will fail - just make sure it stays private!
+    projectId = modrinth_projectId // This can be the project ID or the slug. Either will work!
+    versionNumber = mod_version // You don't need to set this manually. Will fail if Modrinth has this version already
+    versionName = "${mod_version} for ${modAPIReadable[mod_api]} ${minecraft_version}"
+    versionType = "release" // This is the default -- can also be `beta` or `alpha`
+    uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
+    gameVersions = [minecraft_version] // Must be an array, even with only one version
+    loaders = ["neoforge"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+}
+
+// CurseForge
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
+
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
+    // This token is used to authenticate with CurseForge. It should be handled
+    // with the same level of care and security as your actual password. You
+    // should never share your token with an untrusted source or publish it
+    // publicly to GitHub or embed it within a project. The best practice is to
+    // store this token in an environment variable or a build secret.
+    System.out.println("CURSEFORGE_API_KEY is: ${System.getenv("CURSEFORGE_API_KEY")}")
+    apiToken = System.getenv("CURSEFORGE_API_KEY")
+
+    // Tells CurseForgeGradle to publish the output of the jar task. This will
+    // return a UploadArtifact object that can be used to further configure the
+    // file.
+    def mainFile = upload(curseforge_projectId, jar)
+    mainFile.displayName = "CreativeTabSearch-${mod_api}-${minecraft_version}-${mod_version}.jar"
+    mainFile.releaseType = "release"
+    mainFile.addModLoader(modAPILoader[mod_api])
+    mainFile.addGameVersion(minecraft_version)
 }
