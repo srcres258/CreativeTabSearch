@@ -1,3 +1,5 @@
+[简体中文](README-zh.md)
+
 # Description
 This mod adds a searching bar above the creative tab so as to filter specific creative tab menus matching your input.<br>
 **Note that you can only use this mod on the client.** Attempting to add it to the dedicated server will result in a crash.
