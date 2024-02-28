@@ -8,8 +8,8 @@ import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.CreativeModeTab;
-import net.neoforged.neoforge.client.gui.CreativeTabsScreenPage;
-import net.neoforged.neoforge.common.CreativeModeTabRegistry;
+import net.minecraftforge.client.gui.CreativeTabsScreenPage;
+import net.minecraftforge.common.CreativeModeTabRegistry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

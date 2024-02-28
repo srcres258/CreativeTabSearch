@@ -1,6 +1,6 @@
 package top.srcres.mods.creativetabsearch;
 
-import net.neoforged.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.Dist;
 
 public class IllegalDistException extends RuntimeException {
     private Dist dist;
