@@ -6,6 +6,7 @@ plugins {
     id 'net.neoforged.gradle.userdev' version '7.0.80'
     id 'com.modrinth.minotaur' version '2.+' // Modrinth publishing plugin
     id 'net.darkhax.curseforgegradle' version '1.1.18' // CurseForge publishing plugin
+    id 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'  version '2.1.2' // Changelog generation plugin
 }
 
 version = mod_version
@@ -109,12 +110,14 @@ def modAPILoader = [
         'quilt': "quilt"
 ]
 
+def releaseVersionName = "${mod_version} for ${modAPIReadable[mod_api]} ${minecraft_version}"
+
 // Modrinth
 modrinth {
-    token = System.getenv("MODRINTH_TOKEN") // Remember to have the MODRINTH_TOKEN environment variable set or else this will fail - just make sure it stays private!
+    token = System.getenv("BUILD_MODRINTH_TOKEN") // Remember to have the MODRINTH_TOKEN environment variable set or else this will fail - just make sure it stays private!
     projectId = modrinth_projectId // This can be the project ID or the slug. Either will work!
     versionNumber = mod_version // You don't need to set this manually. Will fail if Modrinth has this version already
-    versionName = "${mod_version} for ${modAPIReadable[mod_api]} ${minecraft_version}"
+    versionName = releaseVersionName
     versionType = "release" // This is the default -- can also be `beta` or `alpha`
     uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
     gameVersions = [minecraft_version] // Must be an array, even with only one version
@@ -131,7 +134,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     // should never share your token with an untrusted source or publish it
     // publicly to GitHub or embed it within a project. The best practice is to
     // store this token in an environment variable or a build secret.
-    apiToken = System.getenv("CURSEFORGE_API_KEY")
+    apiToken = System.getenv("BULLD_CURSEFORGE_API_KEY")
 
     // Tells CurseForgeGradle to publish the output of the jar task. This will
     // return a UploadArtifact object that can be used to further configure the
@@ -141,4 +144,22 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     mainFile.releaseType = CFG_Constants.RELEASE_TYPE_RELEASE
     mainFile.addModLoader(modAPILoader[mod_api])
     mainFile.addGameVersion(minecraft_version)
+}
+
+// Git changelog generation
+import se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask
+
+def previousVersionCommit = System.getenv("BUILD_PREVIOUS_VERSION_COMMIT")
+if (previousVersionCommit == null) {
+    previousVersionCommit = "HEAD~5"
+    logger.warn("Environment variable BUILD_PREVIOUS_VERSION_COMMIT is missing! Using the default value: ${previousVersionCommit}")
+}
+
+tasks.register('genMarkdownChangelog', GitChangelogTask) {
+    fromRepo = projectDir.absolutePath.toString()
+    file = buildDir.toPath().resolve('changelog.md').toFile()
+    untaggedName = releaseVersionName
+    fromCommit = previousVersionCommit
+    toRef = "HEAD"
+    templateContent = projectDir.toPath().resolve('changelog').resolve('changelog-markdown.mustache').toFile().getText()
 }
