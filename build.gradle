@@ -123,6 +123,7 @@ modrinth {
 
 // CurseForge
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
+import net.darkhax.curseforgegradle.Constants as CFG_Constants
 
 tasks.register('publishCurseForge', TaskPublishCurseForge) {
     // This token is used to authenticate with CurseForge. It should be handled
@@ -130,7 +131,6 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     // should never share your token with an untrusted source or publish it
     // publicly to GitHub or embed it within a project. The best practice is to
     // store this token in an environment variable or a build secret.
-    System.out.println("CURSEFORGE_API_KEY is: ${System.getenv("CURSEFORGE_API_KEY")}")
     apiToken = System.getenv("CURSEFORGE_API_KEY")
 
     // Tells CurseForgeGradle to publish the output of the jar task. This will
@@ -138,7 +138,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     // file.
     def mainFile = upload(curseforge_projectId, jar)
     mainFile.displayName = "CreativeTabSearch-${mod_api}-${minecraft_version}-${mod_version}.jar"
-    mainFile.releaseType = "release"
+    mainFile.releaseType = CFG_Constants.RELEASE_TYPE_RELEASE
     mainFile.addModLoader(modAPILoader[mod_api])
     mainFile.addGameVersion(minecraft_version)
 }
