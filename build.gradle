@@ -118,7 +118,7 @@ modrinth {
     versionType = "release" // This is the default -- can also be `beta` or `alpha`
     uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
     gameVersions = [minecraft_version] // Must be an array, even with only one version
-    loaders = ["neoforge"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+    loaders = [modAPILoader[mod_api]] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
 }
 
 // CurseForge
