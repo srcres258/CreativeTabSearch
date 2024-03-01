@@ -47,12 +47,22 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
         // Only enable the creative tab searching ability when the specific game mode is satisfied
         // as mentioned in vanilla code.
         if (this.minecraft.gameMode.hasInfiniteItems()) {
-            this.tabSearch_editBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
-                    this.imageWidth - 20, 15, this.tabSearch_editBox, Component.literal(""));
+            if (this.pages.size() > 1) {
+                this.tabSearch_editBox = new EditBox(this.font, this.leftPos, this.topPos - 65,
+                        this.imageWidth - 20, 15, this.tabSearch_editBox, Component.literal(""));
+            } else {
+                this.tabSearch_editBox = new EditBox(this.font, this.leftPos, this.topPos - 45,
+                        this.imageWidth - 20, 15, this.tabSearch_editBox, Component.literal(""));
+            }
             this.tabSearch_editBox.setResponder(this::tabSearch_updateTabSearch);
             this.addWidget(this.tabSearch_editBox);
-            this.tabSearch_clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
-                    .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
+            if (this.pages.size() > 1) {
+                this.tabSearch_clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
+                        .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 65, 20, 15).build();
+            } else {
+                this.tabSearch_clearButton = Button.builder(Component.literal("X"), this::tabSearch_clearButtonClicked)
+                        .bounds(this.leftPos + this.imageWidth - 20, this.topPos - 45, 20, 15).build();
+            }
             this.tabSearch_clearButton.active = !this.tabSearch_editBox.getValue().isEmpty();
             this.addRenderableWidget(this.tabSearch_clearButton);
         }
