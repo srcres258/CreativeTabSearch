@@ -122,6 +122,9 @@ modrinth {
     uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
     gameVersions = [minecraft_version] // Must be an array, even with only one version
     loaders = [modAPILoader[mod_api]] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+    changelog.set(provider {
+        buildDir.toPath().resolve('changelog.md').toFile().text
+    } as Provider<? extends String>)
 }
 
 // CurseForge
@@ -161,5 +164,8 @@ tasks.register('genMarkdownChangelog', GitChangelogTask) {
     untaggedName = releaseVersionName
     fromCommit = previousVersionCommit
     toRef = "HEAD"
-    templateContent = projectDir.toPath().resolve('changelog').resolve('changelog-markdown.mustache').toFile().getText()
+    templateContent = projectDir.toPath().resolve('changelog').resolve('changelog-markdown.mustache').toFile().text
 }
+
+tasks.modrinth.dependsOn(tasks.genMarkdownChangelog)
+tasks.publishCurseForge.dependsOn(tasks.genMarkdownChangelog)
