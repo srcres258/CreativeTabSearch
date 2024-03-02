@@ -131,7 +131,7 @@ def modAPILoader = [
 		'quilt': "quilt"
 ]
 
-def releaseVersionName = "${mod_version} for ${modAPIReadable[mod_api]} ${minecraft_version}"
+def releaseVersionName = "${mod_version} for ${modAPIReadable[mod_api]} ${publish_minecraft_versions}"
 
 // Modrinth
 modrinth {
