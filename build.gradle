@@ -146,6 +146,9 @@ modrinth {
 	changelog.set(provider {
 		buildDir.toPath().resolve('changelog.md').toFile().text
 	} as Provider<? extends String>)
+	dependencies {
+		required.project 'fabric-api' // Requires Fabric API.
+	}
 }
 
 // CurseForge
@@ -170,6 +173,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 	publish_minecraft_versions.split(',').toList().forEach { version ->
 		mainFile.addGameVersion(version)
 	}
+	mainFile.addRelation('306612', CFG_Constants.RELATION_REQUIRED) // Requires Fabric API.
 }
 
 // Git changelog generation
