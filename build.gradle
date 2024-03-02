@@ -1,6 +1,9 @@
 plugins {
 	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
+	id 'com.modrinth.minotaur' version '2.+' // Modrinth publishing plugin
+	id 'net.darkhax.curseforgegradle' version '1.1.18' // CurseForge publishing plugin
+	id 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'  version '2.1.2' // Changelog generation plugin
 }
 
 version = project.mod_version
@@ -105,5 +108,87 @@ publishing {
 		// Notice: This block does NOT have the same function as the block in the top level.
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
+		maven {
+			url "file://${project.projectDir}/repo"
+		}
 	}
 }
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+def modAPIReadable = [
+		'neo': "NeoForge",
+		'forge': "Forge",
+		'fabric': "Fabric",
+		'quilt': "Quilt"
+]
+def modAPILoader = [
+		'neo': "neoforge",
+		'forge': "forge",
+		'fabric': "fabric",
+		'quilt': "quilt"
+]
+
+def releaseVersionName = "${mod_version} for ${modAPIReadable[mod_api]} ${minecraft_version}"
+
+// Modrinth
+modrinth {
+	token = System.getenv("BUILD_MODRINTH_TOKEN") // Remember to have the MODRINTH_TOKEN environment variable set or else this will fail - just make sure it stays private!
+	projectId = modrinth_projectId // This can be the project ID or the slug. Either will work!
+	versionNumber = mod_version // You don't need to set this manually. Will fail if Modrinth has this version already
+	versionName = releaseVersionName
+	versionType = "release" // This is the default -- can also be `beta` or `alpha`
+	uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
+	gameVersions = publish_minecraft_versions.split(',').toList() // Must be an array, even with only one version
+	loaders = [modAPILoader[mod_api]] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+	changelog.set(provider {
+		buildDir.toPath().resolve('changelog.md').toFile().text
+	} as Provider<? extends String>)
+}
+
+// CurseForge
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
+import net.darkhax.curseforgegradle.Constants as CFG_Constants
+
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
+	// This token is used to authenticate with CurseForge. It should be handled
+	// with the same level of care and security as your actual password. You
+	// should never share your token with an untrusted source or publish it
+	// publicly to GitHub or embed it within a project. The best practice is to
+	// store this token in an environment variable or a build secret.
+	apiToken = System.getenv("BULLD_CURSEFORGE_API_KEY")
+
+	// Tells CurseForgeGradle to publish the output of the jar task. This will
+	// return a UploadArtifact object that can be used to further configure the
+	// file.
+	def mainFile = upload(curseforge_projectId, jar)
+	mainFile.displayName = "CreativeTabSearch-${mod_api}-${minecraft_version}-${mod_version}.jar"
+	mainFile.releaseType = CFG_Constants.RELEASE_TYPE_RELEASE
+	mainFile.addModLoader(modAPILoader[mod_api])
+	publish_minecraft_versions.split(',').toList().forEach { version ->
+		mainFile.addGameVersion(version)
+	}
+}
+
+// Git changelog generation
+import se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask
+
+def previousVersionCommit = System.getenv("BUILD_PREVIOUS_VERSION_COMMIT")
+if (previousVersionCommit == null) {
+	previousVersionCommit = "HEAD~5"
+	logger.warn("Environment variable BUILD_PREVIOUS_VERSION_COMMIT is missing! Using the default value: ${previousVersionCommit}")
+}
+
+tasks.register('genMarkdownChangelog', GitChangelogTask) {
+	fromRepo = projectDir.absolutePath.toString()
+	file = buildDir.toPath().resolve('changelog.md').toFile()
+	untaggedName = releaseVersionName
+	fromCommit = previousVersionCommit
+	toRef = "HEAD"
+	templateContent = projectDir.toPath().resolve('changelog').resolve('changelog-markdown.mustache').toFile().text
+}
+
+tasks.modrinth.dependsOn(tasks.genMarkdownChangelog)
+tasks.publishCurseForge.dependsOn(tasks.genMarkdownChangelog)
