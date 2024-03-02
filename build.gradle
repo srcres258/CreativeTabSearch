@@ -63,6 +63,9 @@ processResources {
 				"mod_license": project.mod_license,
 				"mod_description": project.mod_description,
 				"mod_authors": project.mod_authors,
+				"mod_fabricloader_version_range_floor": project.mod_fabricloader_version_range_floor,
+				"mod_minecraft_version_range_floor": project.mod_minecraft_version_range_floor,
+				"mod_minecraft_version_range_ceil": project.mod_minecraft_version_range_ceil,
 				"minecraft_version": project.minecraft_version
 		])
 	}
