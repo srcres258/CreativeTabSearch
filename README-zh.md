@@ -19,5 +19,13 @@
 其他语言也受支持，例如简体中文：
 ![Screenshot 6](docs/ss6.png)
 
+0.1.2 版本开始新增高级搜索选项，需带前缀“@”。
+
+@modid：搜索指定modid的模组标签页，可指定多个（图中仅指定了1个）：
+![Screenshot 7](docs/ss7.png)
+
+@itemid：搜索包含指定物品id的标签页，可指定多个（图中仅指定了1个）：
+![Screenshot 8](docs/ss8.png)
+
 # 协议
 本项目使用 [GNU Lesser General Public License v3.0 only](https://spdx.org/licenses/LGPL-3.0-only.html) 授权。

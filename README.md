@@ -21,5 +21,13 @@ Your input can be removed immediately by clicking the "X" button beside the box.
 International languages are supported as well, e.g. Chinese (Simplified).
 ![Screenshot 6](docs/ss6.png)
 
+Since version 0.1.2, advanced searching options are supported (with the prefix "@" specified).
+
+@modid：Search for tabs matching the modid inputed. Multiple inputs can be given (only one given in the screenshot as an example):
+![Screenshot 7](docs/ss7.png)
+
+@itemid：Search for tabs containing the item which matches the input，Multiple inputs can be given (only one given in the screenshot as an example):
+![Screenshot 8](docs/ss8.png)
+
 # License
 This project is licensed under [GNU Lesser General Public License v3.0 only](https://spdx.org/licenses/LGPL-3.0-only.html).
