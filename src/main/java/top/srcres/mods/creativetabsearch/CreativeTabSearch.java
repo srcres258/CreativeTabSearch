@@ -1,6 +1,7 @@
 package top.srcres.mods.creativetabsearch;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.resources.ResourceKey;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -21,7 +22,6 @@ public class CreativeTabSearch {
             throw new IllegalDistException();
 
         instance = this;
-
         logger = LogUtils.getLogger();
     }
 
