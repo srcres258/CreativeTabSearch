@@ -198,7 +198,7 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
             ++tabIndex;
             if (tabIndex == 10) {
                 this.pages.add(new CreativeTabsScreenPage(currentPage));
-                currentPage = new ArrayList();
+                currentPage = new ArrayList<>();
                 tabIndex = 0;
             }
         }
