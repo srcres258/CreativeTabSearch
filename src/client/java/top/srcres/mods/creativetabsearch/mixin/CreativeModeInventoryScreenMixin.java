@@ -11,6 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import top.srcres.mods.creativetabsearch.SearchHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,13 +108,67 @@ public abstract class CreativeModeInventoryScreenMixin extends EffectRenderingIn
 
     @Unique
     private static List<CreativeModeTab> tabSearch_getMatchingTabs(String searchStr) {
-        ArrayList<CreativeModeTab> result = new ArrayList<>();
-        for (CreativeModeTab tab : BuiltInRegistries.CREATIVE_MODE_TAB.stream().toList()) {
-            if (tab.getDisplayName().getString().contains(searchStr)) {
-                result.add(tab);
+        if (searchStr.startsWith("@")) {
+            if (SearchHelper.validateSearchCommand(searchStr)) {
+                searchStr = SearchHelper.cleanSearchCommand(searchStr);
+                String[] parts = searchStr.split(" ");
+                return switch (parts[0].toLowerCase()) {
+                    case "modid" -> {
+                        if (parts.length < 2) {
+                            // Necessary arguments are missing
+                            yield new ArrayList<>();
+                        } else {
+                            ArrayList<CreativeModeTab> result = new ArrayList<>();
+                            for (int i = 1; i < parts.length; i++) {
+                                String modid = parts[i];
+                                for (CreativeModeTab tab : BuiltInRegistries.CREATIVE_MODE_TAB.stream().toList()) {
+                                    String[] arr = tab.getIconItem().getDescriptionId().split("\\.");
+                                    if (BuiltInRegistries.ITEM.getKey(tab.getIconItem().getItem()).getNamespace().contains(modid)) {
+                                        result.add(tab);
+                                    } else if (arr.length > 1 && arr[1].contains(modid)) {
+                                        result.add(tab);
+                                    }
+                                }
+                            }
+                            yield result;
+                        }
+                    }
+                    case "itemid" -> {
+                        if (parts.length < 2) {
+                            // Necessary arguments are missing
+                            yield new ArrayList<>();
+                        } else {
+                            ArrayList<CreativeModeTab> result = new ArrayList<>();
+                            for (int i = 1; i < parts.length; i++) {
+                                String itemid = parts[i];
+                                for (CreativeModeTab tab : BuiltInRegistries.CREATIVE_MODE_TAB.stream().toList()) {
+                                    for (ItemStack stack : tab.getDisplayItems()) {
+                                        if (BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath().contains(itemid)) {
+                                            result.add(tab);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            yield result;
+                        }
+                    }
+                    default -> // No command matches; search failed
+                            new ArrayList<>();
+                };
+            } else {
+                // Command is wrong
+                return new ArrayList<>();
             }
+        } else {
+            ArrayList<CreativeModeTab> result = new ArrayList<>();
+            for (CreativeModeTab tab : BuiltInRegistries.CREATIVE_MODE_TAB.stream().toList()) {
+                if (tab.getDisplayName().getString().contains(searchStr)) {
+                    result.add(tab);
+                }
+            }
+            return result;
         }
-        return result;
     }
 
     @Unique
