@@ -1,5 +1,8 @@
 [简体中文](README-zh.md)
 
+[![](https://img.shields.io/badge/License-LGPL--3.0--only-blue)](https://spdx.org/licenses/LGPL-3.0-only.html)
+[![](https://cf.way2muchnoise.eu/240630.svg)](https://www.curseforge.com/minecraft/mc-mods/creativetabsearch)
+
 **Fabric** is now supported, but the required [**Fabric API**](https://www.modrinth.com/mod/fabric-api) must be installed.
 
 # Description

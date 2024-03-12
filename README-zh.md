@@ -1,3 +1,7 @@
+
+[![](https://img.shields.io/badge/License-LGPL--3.0--only-blue)](https://spdx.org/licenses/LGPL-3.0-only.html)
+[![](https://cf.way2muchnoise.eu/240630.svg)](https://www.curseforge.com/minecraft/mc-mods/creativetabsearch)
+
 现已支持**Fabric**，但需安装前置模组[**Fabric API**](https://www.mcmod.cn/class/3124.html)。
 
 # 简介
